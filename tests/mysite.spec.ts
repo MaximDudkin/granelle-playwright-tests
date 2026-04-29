@@ -22,35 +22,22 @@ test.describe('Смоук-тесты сайта Granelle', () => {
     await expect(heading).toBeVisible();
   });
 
-  test('2. Фильтрация по комнатности на главной странице', async ({ page, context }) => {
-    // Отключение геолокации
-    await context.grantPermissions(['geolocation']);
+  test('2. Соответствие количества карточек проектов на главной 22', async ({ page }) => {
+    // 2. Ожидание, пока загрузятся данные с сервера
+    await page.waitForLoadState('networkidle');
 
-    // 1. Клик по кнопке "Все фильтры"
-    const allFiltersButton = page.getByRole('button', { name: 'Все фильтры' }).first();
-    await allFiltersButton.click({ force: true });
+    // 3. Создание локатора для карточек проектов
+    const projectCards = page.locator('.card_ud9Wd');
 
-    // 2. Выбор "Студии" в открывшейся панели
-    await page.waitForSelector('text=Студии', { state: 'visible', timeout: 10000 });
-    const studioCheckbox = page.getByText('Студии').first();
+    // 4. Ожидание, чтобы элементы стали видимыми
+    await projectCards.first().waitFor({ state: 'visible' });
 
-    // 3. Клик по кнопке "Студии"
-    await studioCheckbox.dispatchEvent('click');
+    // 5. Проверка, что количество найденных элементов ровно 22
+    await expect(projectCards).toHaveCount(22);
 
-    // 4. Поиск кнопки "Применить"
-    const submitButton = page
-      .locator('button')
-      .filter({ hasText: /(Применить)/ })
-      .first();
-
-    // 5. Клик по кнопке "Применить"
-    await submitButton.dispatchEvent('click');
-
-    // 6. Проверка, что в URL появился параметр студий (rooms=0)
-    await expect(page).toHaveURL(/.*rooms=0.*/, { timeout: 10000 });
-
-    // 7. Или проверка, что панель фильтров закрылась
-    await expect(page.locator('.v-panel')).toBeHidden();
+    // Вывод в консоль для наглядности
+    const count = await projectCards.count();
+    console.log(`Найдено карточек: ${count}`);
   });
 
   test('3. Добавление и удаление из избранного на странице подбора', async ({ page, context }) => {
@@ -59,7 +46,7 @@ test.describe('Смоук-тесты сайта Granelle', () => {
     await context.grantPermissions(['geolocation']);
 
     // 1. Поиск кнопки избранного внутри первой карточки
-    const favoriteButton = page.locator('.buttonWrapper_ToiYZ').first();
+    const favoriteButton = page.locator('[class*="buttonWrapper"]').first();
 
     // 2. Клик по кнопке избранного
     await favoriteButton.click();
@@ -75,7 +62,7 @@ test.describe('Смоук-тесты сайта Granelle', () => {
     await expect(counter).toHaveText('0', { timeout: 15000 });
   });
 
-  test('4. Соответствие количества карточек на подборе 22', async ({ page }) => {
+  test('4. Соответствие количества карточек квартир на подборе 22', async ({ page }) => {
     // 1. Переход на страницу поиска квартир
     await page.goto('https://granelle.ru/flats'); // Открываем целевой URL
 
